@@ -12,7 +12,7 @@
 typedef enum {
   NAGI_FOC_MOTOR_OK = 0, ///< No error.
   NAGI_FOC_MOTOR_ERROR,  ///< General error.
-  MAGI_FOC_MOTOR_HANLDLE_NULL, ///< Handle is NULL.
+  MAGI_FOC_MOTOR_HANDLE_NULL, ///< Handle is NULL.
   NAGI_FOC_MOTOR_POINTER_NULL, ///< Pointer is NULL.
   NAGI_FOC_MOTOR_INVALID_ARGUMENT, ///< Invalid argument.
 } nagi_foc_error_t;
@@ -22,7 +22,7 @@ typedef void (*nagi_foc_set_pwm_duty_fn_t)(float, float, float);
 /// @brief Delay function typedef.
 typedef void (*nagi_foc_delay_fn_t)(uint32_t);
 
-/// @brief FOC motor structure configuration.
+/// @brief FOC motor configuration structure.
 typedef struct nagi_foc_motor_config_t {
   /// @brief Set PWM duty cycle function pointer.
   nagi_foc_set_pwm_duty_fn_t set_pwm_duty_fn;

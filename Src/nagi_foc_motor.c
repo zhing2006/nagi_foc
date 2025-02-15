@@ -132,7 +132,7 @@ float nagi_foc_motor_normalize_angle_diff(float angle_diff, float full_cycle) {
 
 nagi_foc_error_t nagi_foc_motor_init(nagi_foc_motor_t *pmotor, const nagi_foc_motor_config_t *pconfig) {
   if (pmotor == NULL) {
-    return MAGI_FOC_MOTOR_HANLDLE_NULL;
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
 
   if (pconfig == NULL) {
@@ -182,7 +182,7 @@ nagi_foc_error_t nagi_foc_motor_init(nagi_foc_motor_t *pmotor, const nagi_foc_mo
 
 nagi_foc_error_t nagi_foc_motor_set_torque(nagi_foc_motor_t *pmotor, float electrical_angle, float torque_d, float torque_q) {
   if (pmotor == NULL) {
-    return MAGI_FOC_MOTOR_HANLDLE_NULL;
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
 
   if (pmotor->set_pwm_duty_fn == NULL) {
@@ -201,7 +201,7 @@ nagi_foc_error_t nagi_foc_motor_set_torque(nagi_foc_motor_t *pmotor, float elect
 
 nagi_foc_error_t nagi_foc_motor_calibrate(nagi_foc_motor_t *pmotor) {
   if (pmotor == NULL) {
-    return MAGI_FOC_MOTOR_HANLDLE_NULL;
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
 
   if (pmotor->delay_fn == NULL) {
@@ -227,7 +227,7 @@ nagi_foc_error_t nagi_foc_motor_calibrate(nagi_foc_motor_t *pmotor) {
 
 nagi_foc_error_t nagi_foc_motor_calculate_current(nagi_foc_motor_t *pmotor, float i_a, float i_b, float *pi_d, float *pi_q) {
   if (pmotor == NULL) {
-    return MAGI_FOC_MOTOR_HANLDLE_NULL;
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
 
   if (pi_d == NULL || pi_q == NULL) {
@@ -254,7 +254,7 @@ static float _position_loop(nagi_foc_motor_t *pmotor, float target_angle) {
 
 nagi_foc_error_t nagi_foc_motor_position_control(nagi_foc_motor_t *pmotor, float target_angle) {
   if (pmotor == NULL) {
-    return MAGI_FOC_MOTOR_HANLDLE_NULL;
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
 
   const float q = _position_loop(pmotor, target_angle);
@@ -269,7 +269,7 @@ static float _speed_loop(nagi_foc_motor_t *pmotor, float target_speed) {
 
 nagi_foc_error_t nagi_foc_motor_speed_control(nagi_foc_motor_t *pmotor, float target_speed) {
   if (pmotor == NULL) {
-    return MAGI_FOC_MOTOR_HANLDLE_NULL;
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
 
   const float q = _speed_loop(pmotor, target_speed);
@@ -310,7 +310,7 @@ static float _current_q_loop(nagi_foc_motor_t *pmotor, float target_i_q) {
 
 nagi_foc_error_t nagi_foc_motor_current_control(nagi_foc_motor_t *pmotor, float target_i_d, float target_i_q) {
   if (pmotor == NULL) {
-    return MAGI_FOC_MOTOR_HANLDLE_NULL;
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
 
   if (pmotor->set_pwm_duty_fn == NULL) {
@@ -324,7 +324,7 @@ nagi_foc_error_t nagi_foc_motor_current_control(nagi_foc_motor_t *pmotor, float 
 
 nagi_foc_error_t nagi_foc_motor_speed_current_control(nagi_foc_motor_t *pmotor, float target_speed, float max_current) {
   if (pmotor == NULL) {
-    return MAGI_FOC_MOTOR_HANLDLE_NULL;
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
 
   if (pmotor->set_pwm_duty_fn == NULL) {
@@ -343,7 +343,7 @@ nagi_foc_error_t nagi_foc_motor_speed_current_control(nagi_foc_motor_t *pmotor, 
 
 nagi_foc_error_t nagi_foc_motor_position_speed_current_control(nagi_foc_motor_t *pmotor, float target_angle, float max_speed, float max_current) {
   if (pmotor == NULL) {
-    return MAGI_FOC_MOTOR_HANLDLE_NULL;
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
 
   if (pmotor->set_pwm_duty_fn == NULL) {
