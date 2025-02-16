@@ -153,7 +153,7 @@ nagi_foc_error_t nagi_foc_motor_init(nagi_foc_motor_t *pmotor, const nagi_foc_mo
   pmotor->pole_pairs = pconfig->pole_pairs;
   pmotor->voltage_limit = pconfig->voltage_limit;
   pmotor->position_cycle = pconfig->position_cycle;
-  pmotor->is_calibrated = pmotor->is_logical_angle_ready = pmotor->is_speed_ready = false;
+  pmotor->is_calibrated = pmotor->is_logical_angle_ready = pmotor->is_speed_ready = pmotor->is_current_ready = false;
   pmotor->i_d = pmotor->i_q = 0.0f;
   pmotor->speed = 0.0f;
   pmotor->encoder_angle = 0.0f;

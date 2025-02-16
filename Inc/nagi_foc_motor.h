@@ -80,6 +80,8 @@ typedef struct nagi_foc_motor_t {
   bool is_logical_angle_ready;
   /// @brief Is speed ready.
   bool is_speed_ready;
+  /// @brief Is current ready.
+  bool is_current_ready;
 
   /// @brief Current in d axis.
   float i_d;
