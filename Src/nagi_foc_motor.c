@@ -53,8 +53,7 @@ __attribute__((weak)) void nagi_foc_motor_calc_svpwm(float phi, float d, float q
   // Calculate the a, b, c axis.
   float i_a, i_b, i_c;
   arm_inv_clarke_f32(i_alpha, i_beta, &i_a, &i_b);
-  /* Calculating pIb from Ialpha and Ibeta by equation pIb = -(1/2) * Ialpha - (sqrt(3)/2) * Ibeta */
-  i_c = -0.5f * i_alpha - 0.8660254039f * i_beta;
+  i_c = -i_a - i_b;
 
   // Calculate the maximum and minimum.
   float max = MAX(MAX(i_a, i_b), i_c);
