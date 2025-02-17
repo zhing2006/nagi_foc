@@ -34,15 +34,6 @@
 #define M_SQRT3 (1.7320508075688772935274463415059)
 #endif
 
-static float _normalize_angle_0_2pi(float angle) {
-  // Normalize the angle to be within the range [0, 2*PI].
-  angle = fmodf(angle, 2.0f * M_PI);
-  if (angle < 0.0f) {
-    angle += 2.0f * M_PI;
-  }
-  return angle;
-}
-
 /// @brief Calculate the voltage space vector pulse width modulation.
 /// @param phi The angle of the rotor.
 /// @param d The D axis voltage.
@@ -51,72 +42,31 @@ static float _normalize_angle_0_2pi(float angle) {
 /// @param pv The V phase voltage.
 /// @param pw The W phase voltage.
 __attribute__((weak)) void nagi_foc_motor_calc_svpwm(float phi, float d, float q, float *pu, float *pv, float *pw) {
-  // Normalize the angle phi to [0, 2pi) and compute sine and cosine in degrees.
-  phi = _normalize_angle_0_2pi(phi);
+  // Calculate sin and cos values of the electrical angle.
   float sin_phi, cos_phi;
   arm_sin_cos_f32(phi * RAD_TO_DEG, &sin_phi, &cos_phi);
 
-  // Inverse Park transform: transform (d,q) to alpha-beta coordinates.
-  float u_alpha, u_beta;
-  arm_inv_park_f32(d, q, &u_alpha, &u_beta, sin_phi, cos_phi);
+  // Calculate the alpha and beta axis.
+  float i_alpha, i_beta;
+  arm_inv_park_f32(d, q, &i_alpha, &i_beta, sin_phi, cos_phi);
 
-  // Calculate the reference voltage magnitude and its angle (in radians).
-  float Vref;
-  arm_sqrt_f32(u_alpha * u_alpha + u_beta * u_beta, &Vref);
-  float angle_ref;
-  arm_atan2_f32(u_beta, u_alpha, &angle_ref);
-  if (angle_ref < 0.0f) {
-    angle_ref += 2 * M_PI;
-  }
+  // Calculate the a, b, c axis.
+  float i_a, i_b, i_c;
+  arm_inv_clarke_f32(i_alpha, i_beta, &i_a, &i_b);
+  /* Calculating pIb from Ialpha and Ibeta by equation pIb = -(1/2) * Ialpha - (sqrt(3)/2) * Ibeta */
+  i_c = -0.5f * i_alpha - 0.8660254039f * i_beta;
 
-  // Determine the SVPWM sector (each sector spans pi/3 radians).
-  // Use zero-based index for the lookup table.
-  const int sector_index = (int)(angle_ref / (M_PI / 3.0f));
-  const float angle_sector = angle_ref - sector_index * (M_PI / 3.0f);
+  // Calculate the maximum and minimum.
+  float max = MAX(MAX(i_a, i_b), i_c);
+  float min = MIN(MIN(i_a, i_b), i_c);
 
-  // Compute T1 and T2 durations for the two active vectors.
-  // Here Ts is assumed to be 1.0 (i.e. T1+T2+T0 = 1).
-  const float T1 = M_SQRT3 * Vref * arm_sin_f32((M_PI / 3.0f) - angle_sector);
-  const float T2 = M_SQRT3 * Vref * arm_sin_f32(angle_sector);
+  // Calculate the offset.
+  float offset = -(max + min) * 0.5f;
 
-  // Compute the zero vector time and ensure it is non-negative.
-  float T0 = 1.0f - T1 - T2;
-  if (T0 < 0.0f) {
-    T0 = 0.0f; // simple saturation if Vref is too high.
-  }
-  const float t0_half = T0 * 0.5f;
-
-  // Define a lookup table for the active vector contributions.
-  // For each sector (0 to 5) the three phases (A, B, C) receive a weighted sum of T1 and T2:
-  // Each LUT entry is a pair: {coefficient_for_T1, coefficient_for_T2}.
-  // The computed phase duty, after subtracting the t0 baseline, is:
-  // Phase_X = (coef_T1 * T1 + coef_T2 * T2) + t0_half.
-  //
-  // LUT breakdown (zero-based index corresponds to sector):
-  // Sector 0 (SVPWM sector 1): A = T1+T2, B = T2, C = 0
-  // Sector 1 (SVPWM sector 2): A = T1, B = T1+T2, C = 0
-  // Sector 2 (SVPWM sector 3): A = 0, B = T1+T2, C = T2
-  // Sector 3 (SVPWM sector 4): A = 0, B = T1, C = T1+T2
-  // Sector 4 (SVPWM sector 5): A = T2, B = 0, C = T1+T2
-  // Sector 5 (SVPWM sector 6): A = T1+T2, B = 0, C = T1
-  static const float svpwm_lut[6][3][2] = {
-    { {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f} }, // Sector 0: Phase A, B, C
-    { {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f} }, // Sector 1
-    { {0.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f} }, // Sector 2
-    { {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f} }, // Sector 3
-    { {0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 1.0f} }, // Sector 4
-    { {1.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f} }  // Sector 5
-  };
-
-  // Compute the phase duty cycles using the lookup table.
-  const float t_a = svpwm_lut[sector_index][0][0] * T1 + svpwm_lut[sector_index][0][1] * T2 + t0_half;
-  const float t_b = svpwm_lut[sector_index][1][0] * T1 + svpwm_lut[sector_index][1][1] * T2 + t0_half;
-  const float t_c = svpwm_lut[sector_index][2][0] * T1 + svpwm_lut[sector_index][2][1] * T2 + t0_half;
-
-  // Return the calculated duty cycles (normalized to 0.0 ~ 1.0) via the pointers.
-  *pu = t_a;
-  *pv = t_b;
-  *pw = t_c;
+  // Return the calculated duty cycles.
+  *pu = 0.5f + 0.5f * (i_a + offset);
+  *pv = 0.5f + 0.5f * (i_b + offset);
+  *pw = 0.5f + 0.5f * (i_c + offset);
 }
 
 float nagi_foc_motor_normalize_angle_diff(float angle_diff, float full_cycle) {
@@ -208,13 +158,13 @@ nagi_foc_error_t nagi_foc_motor_calibrate(nagi_foc_motor_t *pmotor) {
     return NAGI_FOC_MOTOR_POINTER_NULL;
   }
 
-  nagi_foc_error_t err = nagi_foc_motor_set_torque(pmotor, M_3PI_2, 0.0f, 0.5f);
+  nagi_foc_error_t err = nagi_foc_motor_set_torque(pmotor, 0.0f, 1.0f, 0.0f);
   if (err != NAGI_FOC_MOTOR_OK) {
     return err;
   }
   pmotor->delay_fn(1000);
   pmotor->zero_angle = pmotor->encoder_angle;
-  err = nagi_foc_motor_set_torque(pmotor, M_3PI_2, 0.0f, 0.0f);
+  err = nagi_foc_motor_set_torque(pmotor, 0.0f, 0.0f, 0.0f);
   if (err != NAGI_FOC_MOTOR_OK) {
     return err;
   }
@@ -222,6 +172,7 @@ nagi_foc_error_t nagi_foc_motor_calibrate(nagi_foc_motor_t *pmotor) {
   pmotor->set_pwm_duty_fn(0.0f, 0.0f, 0.0f);
   pmotor->logical_angle = 0.0f;
   pmotor->is_calibrated = true;
+
   return err;
 }
 
