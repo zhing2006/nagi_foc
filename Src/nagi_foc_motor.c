@@ -291,7 +291,7 @@ nagi_foc_error_t nagi_foc_motor_speed_current_control(nagi_foc_motor_t *pmotor, 
   return nagi_foc_motor_current_control(pmotor, 0.0f, target_i_q);
 }
 
-nagi_foc_error_t nagi_foc_motor_position_speed_current_control(nagi_foc_motor_t *pmotor, float target_angle, float max_speed, float max_current) {
+nagi_foc_error_t nagi_foc_motor_position_speed_control(nagi_foc_motor_t *pmotor, float target_angle, float max_speed) {
   if (pmotor == NULL) {
     return MAGI_FOC_MOTOR_HANDLE_NULL;
   }
@@ -307,5 +307,24 @@ nagi_foc_error_t nagi_foc_motor_position_speed_current_control(nagi_foc_motor_t 
     target_speed = -max_speed;
   }
 
-  return nagi_foc_motor_speed_current_control(pmotor, target_speed, max_current);
+  return nagi_foc_motor_speed_control(pmotor, target_speed);
+}
+
+nagi_foc_error_t nagi_foc_motor_position_current_control(nagi_foc_motor_t *pmotor, float target_angle, float max_current) {
+  if (pmotor == NULL) {
+    return MAGI_FOC_MOTOR_HANDLE_NULL;
+  }
+
+  if (pmotor->set_pwm_duty_fn == NULL) {
+    return NAGI_FOC_MOTOR_POINTER_NULL;
+  }
+
+  float target_i_q = _position_loop(pmotor, target_angle);
+  if (target_i_q > max_current) {
+    target_i_q = max_current;
+  } else if (target_i_q < -max_current) {
+    target_i_q = -max_current;
+  }
+
+  return nagi_foc_motor_current_control(pmotor, 0.0f, target_i_q);
 }

@@ -178,13 +178,19 @@ nagi_foc_error_t nagi_foc_motor_current_control(nagi_foc_motor_t *pmotor, float 
 /// @return FOC motor error code.
 nagi_foc_error_t nagi_foc_motor_speed_current_control(nagi_foc_motor_t *pmotor, float target_speed, float max_current);
 
-/// @brief Motor position, speed, and current control.
+/// @brief Motor position and speed control.
 /// @param[in] motor FOC motor structure.
 /// @param[in] target_angle Target angle.
 /// @param[in] max_speed Maximum speed.
+/// @return FOC motor error code.
+nagi_foc_error_t nagi_foc_motor_position_speed_control(nagi_foc_motor_t *pmotor, float target_angle, float max_speed);
+
+/// @brief Motor position and current control.
+/// @param[in] motor FOC motor structure.
+/// @param[in] target_angle Target angle.
 /// @param[in] max_current Maximum current.
 /// @return FOC motor error code.
-nagi_foc_error_t nagi_foc_motor_position_speed_current_control(nagi_foc_motor_t *pmotor, float target_angle, float max_speed, float max_current);
+nagi_foc_error_t nagi_foc_motor_position_current_control(nagi_foc_motor_t *pmotor, float target_angle, float max_current);
 
 /// @brief Get the mechanical angle of the motor.
 /// @param[in] motor FOC motor structure.
